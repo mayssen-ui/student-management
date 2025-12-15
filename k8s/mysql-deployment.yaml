@@ -40,8 +40,12 @@ spec:
         - name: mysql
           image: mysql:8
           env:
+            # Variable pour le mot de passe root
             - name: MYSQL_ROOT_PASSWORD
               value: "root123"
+            # CORRECTION FINALE : Ajout de la base de données au premier démarrage
+            - name: MYSQL_DATABASE
+              value: "studentdb"
           ports:
             - containerPort: 3306
           volumeMounts:
@@ -64,3 +68,36 @@ spec:
   ports:
     - port: 3306
       targetPort: 3306
+
+# =========================================================
+# AJOUT DE L'APPLICATION SPRING BOOT ET DE SON SERVICE
+# =========================================================
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-app
+  template:
+    metadata:
+      labels:
+        app: spring-app
+    spec:
+      containers:
+        - name: spring-app
+          image: [votre-image-spring-boot] # <<<<<<<< À REMPLACER
+          ports:
+            - containerPort: 8089 
+          env:
+            # Connexion au service MySQL via son nom DNS Kubernetes
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/studentdb?allowPublicKeyRetrieval=true&useSSL=false
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: root123
