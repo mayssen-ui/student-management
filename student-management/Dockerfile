@@ -1,13 +1,14 @@
-# Étape 1 : Build
-FROM maven:3.9.4-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+# On utilise une image légère juste pour RUN (pas besoin de Maven ici)
+FROM eclipse-temurin:17-jre-alpine
 
-# Étape 2 : Run
-FROM eclipse-temurin:17-jdk
 WORKDIR /app
-COPY --from=build /app/target/student-management-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# On copie le JAR qui a été généré par Jenkins juste avant (à l'étape 2 du pipeline)
+# Le chemin "target/*.jar" correspond à l'endroit où Maven dépose le fichier
+COPY target/*.jar app.jar
+
+# On expose le port 8089 (celui utilisé dans ton service Kubernetes)
+EXPOSE 8089
+
+# Lancement de l'application
+ENTRYPOINT ["java", "-jar", "app.jar"]
